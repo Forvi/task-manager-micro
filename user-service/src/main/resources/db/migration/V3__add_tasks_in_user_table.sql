@@ -1,0 +1,2 @@
+ALTER TABLE person.users
+ADD COLUMN IF NOT EXISTS tasks UUID[];

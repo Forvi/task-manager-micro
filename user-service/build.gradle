@@ -1,0 +1,114 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.11'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.openapi.generator' version "7.16.0"
+}
+
+group = 'ru.user'
+version = '0.0.1-SNAPSHOT'
+description = 'User service for Task manager'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2024.0.2")
+	set('openapiVersion', '2.8.14')
+	set('mapstructVersion', '1.6.3')
+	set('lombokVersion', '1.18.42')
+	set('psqlVersion', '42.7.8')
+//	set('hibernateEnversVersion', '7.1.8.Final')
+	set('flywayVersion', '11.17.0')
+	set('okhttp3Version', '5.3.2')
+	set('gsonVersion', '2.13.2')
+	set('jacksonDatabindNullableVersion', '0.2.8')
+	set('mapstructVersion', '1.6.3')
+}
+
+dependencies {
+	/* SPRING */
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa"
+	implementation "org.springframework.boot:spring-boot-starter-web"
+	implementation "org.springframework.boot:spring-boot-starter-validation"
+	implementation "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client"
+	developmentOnly "org.springframework.boot:spring-boot-devtools"
+	testImplementation "org.springframework.boot:spring-boot-starter-test"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:${openapiVersion}"
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiVersion}"
+
+	/* PERSISTENCE */
+	implementation "org.flywaydb:flyway-core:${flywayVersion}"
+	implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+//	implementation "org.hibernate.orm:hibernate-envers:${hibernateEnversVersion}"
+	runtimeOnly "org.postgresql:postgresql:${psqlVersion}"
+
+	/* HELPERS */
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+	implementation "com.squareup.okhttp3:okhttp:${okhttp3Version}"
+	implementation "com.google.code.gson:gson:${gsonVersion}"
+	implementation "com.squareup.okhttp3:logging-interceptor:${okhttp3Version}"
+	implementation "org.openapitools:jackson-databind-nullable:${jacksonDatabindNullableVersion}"
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+	/* TEST */
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+openApiGenerate {
+	generatorName.set("spring")
+
+//	inputSpec.set("$rootDir/user-service/src/main/resources/static/openapi.yaml")
+	inputSpec = "${projectDir}/src/main/resources/static/openapi.yaml"
+	outputDir.set("$buildDir/generated/openapi/src/main/java")
+
+	configOptions.set([
+			useSpringBoot3: "true",
+			interfaceOnly: "true",
+			title: "User",
+//			dateLibrary: "java8",
+			useBeanValidation: "true",
+			skipDefaultInterface: "true"
+	])
+}
+
+
+tasks.named('compileJava') {
+	dependsOn tasks.named('openApiGenerate')
+}
+
+sourceSets {
+	getByName("main") {
+		java {
+			srcDir("$buildDir/generated/openapi/src/main/java")
+		}
+	}
+}
+
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

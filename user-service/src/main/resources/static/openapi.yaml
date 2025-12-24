@@ -1,0 +1,240 @@
+openapi: 3.0.0
+info:
+  title: User Service API
+  description: REST API для взаимодействия с User сервисом.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+    description: Local server
+  - url: http://api-gateway:8080
+    description: API Gateway
+
+paths:
+  /api/v1/users:
+    post:
+      summary: Создание пользователя
+      operationId: createUser
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Неверные входные данные
+        '409':
+          description: Пользователь уже существует
+
+    get:
+      summary: Получение списка пользователей
+      operationId: getUsers
+      tags:
+        - Person
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Успешное получение пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/users/{id}:
+    get:
+      summary: Получение пользователя по ID
+      operationId: getUserById
+      tags:
+        - Person
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID пользователя
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешное получение пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          description: Пользователь не найден
+
+components:
+  schemas:
+    UserCreateRequest:
+      type: object
+      required:
+        - username
+        - password
+        - email
+        - firstName
+        - lastName
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-zA-Z0-9_]+$'
+          example: "James2005"
+          description: Уникальное имя пользователя
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 100
+          example: "Password12345!"
+          description: Пароль пользователя
+        email:
+          type: string
+          format: email
+          maxLength: 64
+          example: "james@email.com"
+          description: Email пользователя
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "James"
+          description: Имя пользователя
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Brown"
+          description: Фамилия пользователя
+
+    UserResponse:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - firstName
+        - lastName
+        - created
+        - updated
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор пользователя
+        username:
+          type: string
+          example: "James2005"
+          description: Уникальное имя пользователя
+        email:
+          type: string
+          format: email
+          example: "james@email.com"
+          description: Email пользователя
+        firstName:
+          type: string
+          example: "James"
+          description: Имя пользователя
+        lastName:
+          type: string
+          example: "Brown"
+          description: Фамилия пользователя
+        created:
+          type: string
+          format: date-time
+          example: "2023-12-24T10:30:00Z"
+          description: Дата и время создания
+        updated:
+          type: string
+          format: date-time
+          example: "2023-12-24T11:45:00Z"
+          description: Дата и время последнего обновления
+        active:
+          type: boolean
+          example: true
+          description: Активен ли пользователь
+        tasks:
+          type: array
+          description: Список ID задач пользователя
+          items:
+            type: string
+            format: uuid
+            example: "456e4567-e89b-12d3-a456-426614174000"
+
+    PageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponse'
+        page:
+          type: integer
+          format: int32
+          example: 0
+        size:
+          type: integer
+          format: int32
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          format: int32
+          example: 5
+        last:
+          type: boolean
+          example: false
+
+  responses:
+    ErrorResponse:
+      description: Общая ошибка
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              status:
+                type: integer
+                format: int32
+              error:
+                type: string
+              message:
+                type: string
+              path:
+                type: string

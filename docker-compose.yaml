@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  database-user:
+    image: postgres:15-alpine
+    container_name: postgres_db_user
+    environment:
+      POSTGRES_DB: task-manager-users-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_user:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  database-task:
+    image: postgres:15-alpine
+    container_name: postgres_db_task
+    environment:
+      POSTGRES_DB: task-manager-tasks-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_task:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  service-registry:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+    networks:
+      - microservices-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+    ports:
+      - "8080:8080"
+    depends_on:
+      - service-registry
+    networks:
+      - microservices-network
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user_service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database-user:5432/task-manager-users-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+    ports:
+      - "8081:8081"
+    depends_on:
+      database-user:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+    networks:
+      - microservices-network
+
+  task-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile
+    container_name: task_service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database-task:5432/task-manager-tasks-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_PROFILES_ACTIVE: docker
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
+    ports:
+      - "8082:8082"
+    depends_on:
+      database-task:
+        condition: service_healthy
+      service-registry:
+        condition: service_started
+    networks:
+      - microservices-network
+
+volumes:
+  postgres_data_user:
+  postgres_data_task:
+
+networks:
+  microservices-network:
+    driver: bridge
