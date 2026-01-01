@@ -1,0 +1,298 @@
+openapi: 3.0.0
+info:
+  title: Task Service API
+  description: REST API для взаимодействия с Task сервисом.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8082
+    description: Local server
+  - url: http://api-gateway:8080
+    description: API Gateway
+
+paths:
+  /api/v1/tasks:
+    post:
+      summary: Создание задачи
+      operationId: createTask
+      tags:
+        - Task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+      responses:
+        '201':
+          description: Задача успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Неверные входные данные
+
+    get:
+      summary: Получение списка задач
+      operationId: getTasks
+      tags:
+        - Task
+      parameters:
+        - name: page
+          in: query
+          description: Номер страницы
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Размер страницы
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Успешное получение задач
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+
+  /api/v1/tasks/by-date:
+    get:
+      summary: Получение задач по дате
+      operationId: getTaskByDate
+      tags:
+        - Task
+      parameters:
+        - name: date
+          in: query
+          required: true
+          description: дата выполнения (формат YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Успешное получение задач
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+        '404':
+          description: Задачи не найдены
+        '400':
+          description: Некорректный формат даты
+
+  /api/v1/tasks/{id}:
+    get:
+      summary: Получение задачи по ID
+      operationId: getTaskById
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID задачи
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешное получение задачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '404':
+          description: Задача не найдена
+
+    patch:
+      summary: Частичное обновление задачи
+      operationId: patchTask
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/patch-merge+json:
+            schema:
+              $ref: '#/components/schemas/TaskPatchRequest'
+      responses:
+        '200':
+          description: Задача успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+    delete:
+      summary: Удаление задачи по id
+      operationId: deleteTaskById
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID задачи
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Успешное удаление задачи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '404':
+          description: Задача не найдена
+
+components:
+  schemas:
+    TaskCreateRequest:
+      type: object
+      required:
+        - name
+        - importanceLevel
+        - date
+        - userID
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-zA-Zа-яА-ЯёЁ0-9\s]+$'
+          example: 'Купить молоко'
+          description: Название задачи/действие
+        importanceLevel:
+          type: string
+          format: enum
+          example: NEUTRAL
+        date:
+          type: string
+          format: date
+          example: "2025-12-25"
+          description: Дата выполнения задачи
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор пользователя
+
+    TaskResponse:
+      type: object
+      required:
+        - id
+        - name
+        - completed
+        - importanceLevel
+        - date
+        - userID
+        - created
+        - updated
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор задачи
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-zA-Zа-яА-ЯёЁ0-9\s]+$'
+          example: 'Купить молоко'
+          description: Название задачи/действие
+        completed:
+          type: boolean
+          example: true
+          description: Выполнена ли задача
+        importanceLevel:
+          type: string
+          format: enum
+          example: NEUTRAL
+          description: Уровень важности задачи
+        date:
+          type: string
+          format: date
+          example: "2025-12-25"
+          description: Дата выполнения задачи
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор пользователя
+        created:
+          type: string
+          format: date-time
+          example: "2023-12-24T10:30:00Z"
+          description: Дата и время создания
+        updated:
+          type: string
+          format: date-time
+          example: "2023-12-24T11:45:00Z"
+          description: Дата и время последнего обновления
+        active:
+          type: boolean
+          example: true
+          description: Активна ли задача
+
+    TaskPatchRequest:
+      type: object
+      description: Данные для частичного обновления задачи
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-zA-Zа-яА-ЯёЁ0-9\s]+$'
+          example: 'Купить молоко'
+          nullable: true
+          description: Название задачи. 
+            Если передать null - поле будет сброшено.
+            Если не передать - поле останется без изменений.
+        completed:
+          type: boolean
+          nullable: true
+          description: Статус выполнения.
+        date:
+          type: string
+          format: date
+          example: "2025-12-25"
+          description: Дата выполнения задачи
+        importanceLevel:
+          type: string
+          enum: [LOW, NEUTRAL, MIDDLE, HIGH]
+          nullable: true
+          description: Уровень важности.
+
+    TaskAddRequest:
+      type: object
+      required:
+        - taskId
+      properties:
+        taskId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор задачи

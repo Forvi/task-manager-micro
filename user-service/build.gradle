@@ -86,12 +86,15 @@ openApiGenerate {
 	outputDir.set("$buildDir/generated/openapi/src/main/java")
 
 	configOptions.set([
+			serializationLibrary: "jackson",
 			useSpringBoot3: "true",
 			interfaceOnly: "true",
 			title: "User",
 //			dateLibrary: "java8",
 			useBeanValidation: "true",
-			skipDefaultInterface: "true"
+			skipDefaultInterface: "true",
+			useOptional: "false",
+			openApiNullable: "false"
 	])
 }
 
