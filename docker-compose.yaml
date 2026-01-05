@@ -107,6 +107,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
     ports:
       - "8081:8081"
@@ -114,6 +115,8 @@ services:
       database-user:
         condition: service_healthy
       service-registry:
+        condition: service_started
+      kafka:
         condition: service_started
     networks:
       - microservices-network
@@ -128,6 +131,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_PROFILES_ACTIVE: docker
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://service-registry:8761/eureka
     ports:
       - "8082:8082"
@@ -135,6 +139,8 @@ services:
       database-task:
         condition: service_healthy
       service-registry:
+        condition: service_started
+      kafka:
         condition: service_started
     networks:
       - microservices-network

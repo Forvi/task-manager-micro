@@ -71,8 +71,10 @@ public class UserController implements ApiApi {
     }
 
     @Override
+    @GetMapping
     public ResponseEntity<List<UserResponse>> getUsers(Integer page, Integer size) {
-        return null;
+        var users = userService.getAllUsers();
+        return ResponseEntity.ok().body(users);
     }
 
     @Override

@@ -257,6 +257,65 @@ components:
           example: true
           description: Активна ли задача
 
+    TaskEvent:
+      type: object
+      required:
+        - id
+        - name
+        - completed
+        - importanceLevel
+        - date
+        - userID
+        - created
+        - updated
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор задачи
+        name:
+          type: string
+          minLength: 3
+          maxLength: 64
+          pattern: '^[a-zA-Zа-яА-ЯёЁ0-9\s]+$'
+          example: 'Купить молоко'
+          description: Название задачи/действие
+        completed:
+          type: boolean
+          example: true
+          description: Выполнена ли задача
+        importanceLevel:
+          type: string
+          format: enum
+          example: NEUTRAL
+          description: Уровень важности задачи
+        date:
+          type: string
+          format: date
+          example: "2025-12-25"
+          description: Дата выполнения задачи
+        userID:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+          description: Уникальный идентификатор пользователя
+        created:
+          type: string
+          format: date-time
+          example: "2023-12-24T10:30:00Z"
+          description: Дата и время создания
+        updated:
+          type: string
+          format: date-time
+          example: "2023-12-24T11:45:00Z"
+          description: Дата и время последнего обновления
+        active:
+          type: boolean
+          example: true
+          description: Активна ли задача
+
     TaskPatchRequest:
       type: object
       description: Данные для частичного обновления задачи

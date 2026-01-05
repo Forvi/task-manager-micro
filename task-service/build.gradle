@@ -37,6 +37,8 @@ ext {
 	set('gsonVersion', '2.13.2')
 	set('jacksonDatabindNullableVersion', '0.2.8')
 	set('mapstructVersion', '1.6.3')
+	set('springKafkaVersion', '3.3.1')
+	set('feignVersion', '1.4.7.RELEASE')
 }
 
 dependencies {
@@ -47,9 +49,10 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-validation"
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'org.springframework.cloud:spring-cloud-starter-feign:1.4.7.RELEASE'
+	implementation "org.springframework.cloud:spring-cloud-starter-feign:${feignVersion}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:${openapiVersion}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiVersion}"
+	implementation "org.springframework.kafka:spring-kafka:${springKafkaVersion}"
 
 	/* PERSISTENCE */
 	runtimeOnly "org.postgresql:postgresql:${psqlVersion}"

@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.openapitools.model.UserResponse;
@@ -72,21 +73,15 @@ public class UserService {
     @Transactional
     public UserResponse addTaskForUser(UUID id, UUID taskId) {
         log.debug("Start adding a task to a user: task={}, user={}", taskId, id);
+        User user = userRepository
+                .findById(id)
+                .orElseThrow(() -> new NotExistsException(
+                        String.format("A user with the id %s not exists.", id)
+                ));
 
-        try {
-            User user = userRepository
-                    .findById(id)
-                    .orElseThrow(() -> new NotExistsException(
-                            String.format("A user with the id %s not exists.", id)
-                    ));
-
-            user.getTasks().add(taskId);
-            User savedUser = userRepository.save(user);
-            return userMapper.toResponse(savedUser);
-        } catch (Exception e) {
-            log.error("An unexpected error occurred while trying to adding a task: task_id={}", taskId, e);
-            throw e;
-        }
+        user.getTasks().add(taskId);
+        User savedUser = userRepository.save(user);
+        return userMapper.toResponse(savedUser);
     }
 
     /**
@@ -147,6 +142,11 @@ public class UserService {
             log.error("An unexpected error occurred while trying to soft delete user {}", id);
             throw e;
         }
+    }
+
+    public List<UserResponse> getAllUsers() {
+        List<User> user = userRepository.findAll();
+        return user.stream().map(userMapper::toResponse).toList();
     }
 
     /**

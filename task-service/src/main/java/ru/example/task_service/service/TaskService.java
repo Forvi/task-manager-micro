@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import org.openapitools.model.TaskAddRequest;
+import ru.example.task_service.kafka.KafkaEvents;
 
 @Service
 @Slf4j
@@ -26,38 +26,37 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskMapper taskMapper;
     private final UserClient userClient;
+    private final KafkaEvents kafkaEvents;
 
     @Transactional
     public TaskResponse createTask(TaskCreateRequest request) {
         String name = request.getName();
         log.debug("Starting task creation: task={}", name);
 
-        try {
-            log.debug("Mapping a dto to Task entity: name={}", name);
+        log.debug("Mapping a dto to Task entity: name={}", name);
 
-            if (!userClient.checkExistsUser(request.getUserID())) {
-                throw new NotExistsException("User is not exists: id=" + request.getUserID());
-            }
-
-            Task task = taskMapper.toEntity(request);
-            Instant time = Instant.now();
-            task.setCompleted(false);
-            task.setActive(true);
-            task.setCreated(time);
-            task.setUpdated(time);
-            Task savedTask = taskRepository.save(task);
-
-            TaskAddRequest taskDto = new TaskAddRequest();
-            taskDto.setTaskId(savedTask.getId());
-            System.out.println("saved task id: " + savedTask.getUserID() + " task dto id: " + taskDto.getTaskId());
-            userClient.addTaskForUser(savedTask.getUserID(), taskDto);
-
-            log.info("Task created successfully: id={}, name={}", name, savedTask.getId());
-            return taskMapper.toResponse(savedTask);
-        } catch (Exception e) {
-            log.error("An unexpected error occurred while trying to create task: taskname={}", name);
-            throw e;
+        if (!userClient.checkExistsUser(request.getUserID())) {
+            throw new NotExistsException("User is not exists: id=" + request.getUserID());
         }
+
+        Task task = taskMapper.toEntity(request);
+        Instant time = Instant.now();
+        task.setCompleted(false);
+        task.setActive(true);
+        task.setCreated(time);
+        task.setUpdated(time);
+        Task savedTask = taskRepository.save(task);
+
+        try {
+        log.debug("Trying to send a task to Kafka");
+            kafkaEvents.sendCreationTaskEvent(savedTask);
+            log.info("Task created and event sent: {}", savedTask.getId());
+        } catch (Exception e) {
+            log.warn("Failed to send Kafka event (task still created): {}", e.getMessage());
+        }
+
+        log.info("Task created successfully: id={}, name={}", name, savedTask.getId());
+        return taskMapper.toResponse(savedTask);
     }
 
     @Transactional
