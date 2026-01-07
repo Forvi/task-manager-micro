@@ -37,6 +37,7 @@ ext {
 	set('gsonVersion', '2.13.2')
 	set('jacksonDatabindNullableVersion', '0.2.8')
 	set('mapstructVersion', '1.6.3')
+	set('springKafkaVersion', '3.3.1')
 }
 
 dependencies {
@@ -49,6 +50,7 @@ dependencies {
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-api:${openapiVersion}"
 	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openapiVersion}"
+	implementation "org.springframework.kafka:spring-kafka:${springKafkaVersion}"
 
 	/* PERSISTENCE */
 	implementation "org.flywaydb:flyway-core:${flywayVersion}"
@@ -86,12 +88,15 @@ openApiGenerate {
 	outputDir.set("$buildDir/generated/openapi/src/main/java")
 
 	configOptions.set([
+			serializationLibrary: "jackson",
 			useSpringBoot3: "true",
 			interfaceOnly: "true",
 			title: "User",
 //			dateLibrary: "java8",
 			useBeanValidation: "true",
-			skipDefaultInterface: "true"
+			skipDefaultInterface: "true",
+			useOptional: "false",
+			openApiNullable: "false"
 	])
 }
 

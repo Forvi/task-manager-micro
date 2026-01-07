@@ -2,6 +2,5 @@ rootProject.name = 'task-manager-micro'
 
 include 'eureka-server'
 include 'api-gateway'
-include 'eureka-client'
 include 'user-service'
 include 'task-service'
